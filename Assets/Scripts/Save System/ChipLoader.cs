@@ -7,9 +7,10 @@ using UnityEngine;
 public static class ChipLoader
 {
 
-    public static SavedChip[] GetAllSavedChips(string[] chipPaths)
+    public static Dictionary<string, SavedChip> GetAllSavedChips(string[] chipPaths)
     {
-        SavedChip[] savedChips = new SavedChip[chipPaths.Length];
+        var savedChipsDic = new Dictionary<string, SavedChip>();
+
 
         // Read saved chips from file
         for (int i = 0; i < chipPaths.Length; i++)
@@ -19,20 +20,18 @@ public static class ChipLoader
             {
                 chipSaveString = reader.ReadToEnd();
             }
-            
+
             SaveCompatibility.FixSaveCompatibility(ref chipSaveString);
-            savedChips[i] = JsonUtility.FromJson<SavedChip>(chipSaveString);
+            SavedChip savedChipTemp = JsonUtility.FromJson<SavedChip>(chipSaveString);
+            savedChipsDic.Add(savedChipTemp.chipData.name, savedChipTemp);
         }
-        return savedChips;
+        return savedChipsDic;
     }
 
     public static void LoadAllChips(string[] chipPaths, Manager manager)
     {
-        SavedChip[] savedChips = GetAllSavedChips(chipPaths);
+        //load Built-in
         var LoadFaild = new Dictionary<SavedChip, int>();
-
-        SortChipsByOrderOfCreation(ref savedChips);
-        // Maintain dictionary of loaded chips (initially just the built-in chips)
         Dictionary<string, Chip> loadedChips = new Dictionary<string, Chip>();
         for (int i = 0; i < manager.builtinChips.Length; i++)
         {
@@ -40,39 +39,24 @@ public static class ChipLoader
             loadedChips.Add(builtinChip.chipName, builtinChip);
         }
 
-        foreach (var Chip in savedChips)
-            InstansiateChipOnEditor(LoadChip(Chip, loadedChips, manager.wirePrefab, LoadFaild));
 
-
-
-        var ChipLabelList = new List<SavedChip>();
-        ChipLabelList.AddRange(LoadFaild.Keys);
-
-        for (int i = 0; i < ChipLabelList.Count; i++)
+        var ChipToLoad = GetAllSavedChips(chipPaths);
+        foreach (var chip in ChipToLoad)
         {
-
-            var CurrentLaberl = ChipLabelList[i];
-            if (LoadFaild[CurrentLaberl] <= 0)
-            {
-                Debug.LogError("Failed to load " + CurrentLaberl);
-                ChipLabelList.Remove(CurrentLaberl);
-                LoadFaild.Remove(CurrentLaberl);
-                continue;
-            }
-
-            var ChipSaveData = LoadChip(CurrentLaberl, loadedChips, manager.wirePrefab, LoadFaild);
-            if (ChipSaveData != null)
-            {
-                ChipLabelList.Remove(CurrentLaberl);
-                LoadFaild.Remove(CurrentLaberl);
-                InstansiateChipOnEditor(ChipSaveData);
-            }
-
-            if (i == ChipLabelList.Count - 1)
-                i = -1;
+            if (!loadedChips.ContainsKey(chip.Key))
+                ResolveDependecy(chip.Value);
         }
-
-
+        // the simulation will never create Cyclic path so simple ricorsive descending graph explore shuld be fine
+        void ResolveDependecy(SavedChip chip)
+        {
+            foreach (var dependancy in chip.componentDependecies)
+            {
+                if (string.Equals(dependancy, "SIGNAL IN") || string.Equals(dependancy, "SIGNAL OUT")) continue;
+                if (!loadedChips.ContainsKey(dependancy))
+                    ResolveDependecy(ChipToLoad[dependancy]);
+            }
+            InstansiateChipOnEditor(LoadChip(chip, loadedChips, manager.wirePrefab, LoadFaild));
+        }
 
 
         void InstansiateChipOnEditor(ChipSaveData loadedChipData)

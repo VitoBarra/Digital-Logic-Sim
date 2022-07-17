@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
 
 public static class SaveSystem
@@ -35,7 +36,11 @@ public static class SaveSystem
     public static SavedChip[] GetAllSavedChips()
     {
         // Load any saved chips
-        return ChipLoader.GetAllSavedChips(GetChipSavePaths());
+        var  s = GetChipSavePaths();
+        var  Sc = new List<SavedChip>();
+        foreach (var item in ChipLoader.GetAllSavedChips(s))
+            Sc.Add(item.Value);
+        return Sc.ToArray();
     }
 
     public static string GetPathToSaveFile(string saveFileName) => Path.Combine(CurrentSaveProfileDirectoryPath, saveFileName + fileExtension);
