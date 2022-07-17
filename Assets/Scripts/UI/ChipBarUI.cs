@@ -3,87 +3,96 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class ChipBarUI : MonoBehaviour {
-	public RectTransform bar;
-	public Transform buttonHolder;
-	public CustomButton buttonPrefab;
-	public float buttonSpacing = 15f;
-	public float buttonWidthPadding = 10;
-	float rightmostButtonEdgeX;
-	Manager manager;
-	public List<string> hideList;
-	public Scrollbar horizontalScroll;
+public class ChipBarUI : MonoBehaviour
+{
+    public RectTransform bar;
+    public Transform buttonHolder;
+    public CustomButton buttonPrefab;
+    public float buttonSpacing = 15f;
+    public float buttonWidthPadding = 10;
+    float rightmostButtonEdgeX;
+    Manager manager;
+    public List<string> hideList;
+    public Scrollbar horizontalScroll;
 
-	public List<CustomButton> customButton = new List<CustomButton>();
+    public List<CustomButton> customButtons = new List<CustomButton>();
 
-	void Awake () {
-		manager = FindObjectOfType<Manager> ();
-		manager.customChipCreated += AddChipButton;
-		manager.customChipUpdated += UpdateChipButton;
-		ReloadBar();
-	}
+    void Awake()
+    {
+        manager = FindObjectOfType<Manager>();
+        manager.customChipCreated += AddChipButton;
+        manager.customChipUpdated += UpdateChipButton;
+        ReloadBar();
+    }
 
-	public void ReloadBar()
-    {	
-		foreach(CustomButton button in customButton)
+    public void ReloadBar()
+    {
+        foreach (CustomButton button in customButtons)
         {
-			Destroy(button.gameObject);
-		}
-		customButton.Clear();
-		for (int i = 0; i < manager.builtinChips.Length; i++)
-		{
-			AddChipButton(manager.builtinChips[i]);
-		}
-		Canvas.ForceUpdateCanvases();
-	}
+            Destroy(button.gameObject);
+        }
+        customButtons.Clear();
+        for (int i = 0; i < manager.builtinChips.Length; i++)
+        {
+            AddChipButton(manager.builtinChips[i]);
+        }
+        Canvas.ForceUpdateCanvases();
+    }
 
-	void LateUpdate () {
-		UpdateBarPos ();
-	}
+    void LateUpdate()
+    {
+        UpdateBarPos();
+    }
 
-	void UpdateBarPos () {
-		float barPosY = (horizontalScroll.gameObject.activeSelf) ? 16 : 0;
-		bar.localPosition = new Vector3 (0, barPosY, 0);
-	}
+    void UpdateBarPos()
+    {
+        float barPosY = (horizontalScroll.gameObject.activeSelf) ? 16 : 0;
+        bar.localPosition = new Vector3(0, barPosY, 0);
+    }
 
-	void AddChipButton (Chip chip) {
-		if (hideList.Contains (chip.chipName)) {
-			//Debug.Log("Hiding")
-			return;
-		}
-		CustomButton button = Instantiate (buttonPrefab);
-		button.gameObject.name = "Create (" + chip.chipName + ")";
-		// Set button text
-		var buttonTextUI = button.GetComponentInChildren<TMP_Text> ();
-		buttonTextUI.text = chip.chipName;
+    void AddChipButton(Chip chip)
+    {
+        if (hideList.Contains(chip.chipName))
+        {
+            //Debug.Log("Hiding")
+            return;
+        }
+        CustomButton button = Instantiate(buttonPrefab);
+        button.gameObject.name = "Create (" + chip.chipName + ")";
+        // Set button text
+        var buttonTextUI = button.GetComponentInChildren<TMP_Text>();
+        buttonTextUI.text = chip.chipName;
 
-		// Set button size
-		var buttonRect = button.GetComponent<RectTransform> ();
-		buttonRect.sizeDelta = new Vector2 (buttonTextUI.preferredWidth + buttonWidthPadding, buttonRect.sizeDelta.y);
+        // Set button size
+        var buttonRect = button.GetComponent<RectTransform>();
+        buttonRect.sizeDelta = new Vector2(buttonTextUI.preferredWidth + buttonWidthPadding, buttonRect.sizeDelta.y);
 
-		// Set button position
-		buttonRect.SetParent (buttonHolder, false);
-		//buttonRect.localPosition = new Vector3 (rightmostButtonEdgeX + buttonSpacing + buttonRect.sizeDelta.x / 2f, 0, 0);
-		rightmostButtonEdgeX = buttonRect.localPosition.x + buttonRect.sizeDelta.x / 2f;
+        // Set button position
+        buttonRect.SetParent(buttonHolder, false);
+        //buttonRect.localPosition = new Vector3 (rightmostButtonEdgeX + buttonSpacing + buttonRect.sizeDelta.x / 2f, 0, 0);
+        rightmostButtonEdgeX = buttonRect.localPosition.x + buttonRect.sizeDelta.x / 2f;
 
-		// Set button event
-		//button.onClick.AddListener (() => manager.SpawnChip (chip));
-		button.AddListener(() => manager.SpawnChip (chip));
+        // Set button event
+        //button.onClick.AddListener (() => manager.SpawnChip (chip));
+        button.AddListener(() => manager.SpawnChip(chip));
 
-		customButton.Add(button);
-	}
+        customButtons.Add(button);
+    }
 
-	void UpdateChipButton (Chip chip) {
-		if (hideList.Contains (chip.chipName)) {
-			//Debug.Log("Hiding")
-			return;
-		}
+    void UpdateChipButton(Chip chip)
+    {
+        if (hideList.Contains(chip.chipName))
+        {
+            //Debug.Log("Hiding")
+            return;
+        }
 
-		CustomButton button = customButton.Find(g => g.name == "Create (" + chip.chipName + ")");
-		if (button != null) {
-			button.ClearEvents();
-			button.AddListener(() => manager.SpawnChip (chip));
-		}
-	}
+        CustomButton button = customButtons.Find(g => g.name == "Create (" + chip.chipName + ")");
+        if (button != null)
+        {
+            button.ClearEvents();
+            button.AddListener(() => manager.SpawnChip(chip));
+        }
+    }
 
 }

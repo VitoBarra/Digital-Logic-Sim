@@ -1,114 +1,131 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class CreateMenu : MonoBehaviour {
+public class CreateMenu : MonoBehaviour
+{
 
-	public event System.Action onChipCreatePressed;
+    public event System.Action<ChipCategory> onChipCreatePressed;
 
-	public Button menuOpenButton;
-	public GameObject menuHolder;
-	public TMP_InputField chipNameField;
-	public Button doneButton;
-	public Button cancelButton;
-	public Slider hueSlider;
-	public Slider saturationSlider;
-	public Slider valueSlider;
-	[Range (0, 1)]
-	public float textColThreshold = 0.5f;
+    public Button menuOpenButton;
+    public GameObject menuHolder;
+    public TMP_InputField chipNameField;
+    public Button doneButton;
+    public Button cancelButton;
+    public Slider hueSlider;
+    public Slider saturationSlider;
+    public Slider valueSlider;
+    public TMP_Dropdown ChipCategoryDropDown;
+    [Range(0, 1)]
+    public float textColThreshold = 0.5f;
 
-	public Color[] suggestedColours;
-	int suggestedColourIndex;
+    public Color[] suggestedColours;
+    int suggestedColourIndex;
 
-	void Start () {
-		doneButton.onClick.AddListener (FinishCreation);
-		menuOpenButton.onClick.AddListener (OpenMenu);
-		cancelButton.onClick.AddListener (CloseMenu);
+    
 
-		chipNameField.onValueChanged.AddListener (ChipNameFieldChanged);
-		suggestedColourIndex = Random.Range (0, suggestedColours.Length);
+    void Start()
+    {
+        doneButton.onClick.AddListener(FinishCreation);
+        menuOpenButton.onClick.AddListener(OpenMenu);
+        cancelButton.onClick.AddListener(CloseMenu);
 
-		hueSlider.onValueChanged.AddListener (ColourSliderChanged);
-		saturationSlider.onValueChanged.AddListener (ColourSliderChanged);
-		valueSlider.onValueChanged.AddListener (ColourSliderChanged);
-	}
+        chipNameField.onValueChanged.AddListener(ChipNameFieldChanged);
+        suggestedColourIndex = UnityEngine.Random.Range(0, suggestedColours.Length);
 
-	void Update () {
-		if (menuHolder.activeSelf) {
-			// Force name input field to remain focused
-			if (!chipNameField.isFocused) {
-				chipNameField.Select ();
-				// Put caret at end of text (instead of selecting the text, which is annoying in this case)
-				chipNameField.caretPosition = chipNameField.text.Length;
-			}
-		}
-	}
+        hueSlider.onValueChanged.AddListener(ColourSliderChanged);
+        saturationSlider.onValueChanged.AddListener(ColourSliderChanged);
+        valueSlider.onValueChanged.AddListener(ColourSliderChanged);
 
-	void ColourSliderChanged (float sliderValue) {
-		Color chipCol = Color.HSVToRGB (hueSlider.value, saturationSlider.value, valueSlider.value);
-		UpdateColour (chipCol);
-	}
+        foreach (var item in Enum.GetNames(typeof(ChipCategory)))
+            ChipCategoryDropDown.options.Add(new TMP_Dropdown.OptionData() { text= item}) ;
+    }
 
-	void ChipNameFieldChanged (string value) {
-		string formattedName = value.ToUpper ();
-		doneButton.interactable = IsValidChipName (formattedName.Trim ());
-		chipNameField.text = formattedName;
-		Manager.ActiveChipEditor.chipName = formattedName.Trim ();
-	}
+    void Update()
+    {
+        if (menuHolder.activeSelf)
+        {
+            // Force name input field to remain focused
+            if (!chipNameField.isFocused)
+            {
+                chipNameField.Select();
+                // Put caret at end of text (instead of selecting the text, which is annoying in this case)
+                chipNameField.caretPosition = chipNameField.text.Length;
+            }
+        }
+    }
 
-	bool IsValidChipName (string chipName) {
-		return chipName != "AND" && chipName != "NOT" && chipName.Length != 0;
-	}
+    void ColourSliderChanged(float sliderValue)
+    {
+        Color chipCol = Color.HSVToRGB(hueSlider.value, saturationSlider.value, valueSlider.value);
+        UpdateColour(chipCol);
+    }
 
-	void OpenMenu () {
-		menuHolder.SetActive (true);
-		chipNameField.text = "";
-		ChipNameFieldChanged ("");
-		chipNameField.Select ();
-		SetSuggestedColour ();
-	}
+    void ChipNameFieldChanged(string value)
+    {
+        string formattedName = value.ToUpper();
+        doneButton.interactable = IsValidChipName(formattedName.Trim());
+        chipNameField.text = formattedName;
+        Manager.ActiveChipEditor.chipData.name = formattedName.Trim();
+    }
 
-	void CloseMenu () {
-		menuHolder.SetActive (false);
-	}
+    //TODO:  check gainst all chips
+    bool IsValidChipName(string chipName)
+    {
+        return chipName != "AND" && chipName != "NOT" && chipName.Length != 0;
+    }
 
-	void FinishCreation () {
-		if (onChipCreatePressed != null) {
-			onChipCreatePressed.Invoke ();
-		}
-		CloseMenu ();
-	}
+    void OpenMenu()
+    {
+        menuHolder.SetActive(true);
+        chipNameField.text = "";
+        ChipNameFieldChanged("");
+        chipNameField.Select();
+        SetSuggestedColour();
+    }
 
-	void SetSuggestedColour () {
-		Color suggestedChipColour = suggestedColours[suggestedColourIndex];
-		suggestedChipColour.a = 1;
-		suggestedColourIndex = (suggestedColourIndex + 1) % suggestedColours.Length;
+    void CloseMenu()
+    {
+        menuHolder.SetActive(false);
+    }
 
-		float hue;
-		float sat;
-		float val;
-		Color.RGBToHSV (suggestedChipColour, out hue, out sat, out val);
-		hueSlider.SetValueWithoutNotify (hue);
-		saturationSlider.SetValueWithoutNotify (sat);
-		valueSlider.SetValueWithoutNotify (val);
-		UpdateColour (suggestedChipColour);
-	}
+    void FinishCreation()
+    {
+        onChipCreatePressed?.Invoke((ChipCategory)ChipCategoryDropDown.value);
+        CloseMenu();
+    }
 
-	void UpdateColour (Color chipCol) {
-		var cols = chipNameField.colors;
-		cols.normalColor = chipCol;
-		cols.highlightedColor = chipCol;
-		cols.selectedColor = chipCol;
-		cols.pressedColor = chipCol;
-		chipNameField.colors = cols;
+    void SetSuggestedColour()
+    {
+        Color suggestedChipColour = suggestedColours[suggestedColourIndex];
+        suggestedChipColour.a = 1;
+        suggestedColourIndex = (suggestedColourIndex + 1) % suggestedColours.Length;
 
-		float luma = chipCol.r * 0.213f + chipCol.g * 0.715f + chipCol.b * 0.072f;
-		Color chipNameCol = (luma > textColThreshold) ? Color.black : Color.white;
-		chipNameField.textComponent.color = chipNameCol;
+        float hue, sat, val;
+        Color.RGBToHSV(suggestedChipColour, out hue, out sat, out val);
+        hueSlider.SetValueWithoutNotify(hue);
+        saturationSlider.SetValueWithoutNotify(sat);
+        valueSlider.SetValueWithoutNotify(val);
+        UpdateColour(suggestedChipColour);
+    }
 
-		Manager.ActiveChipEditor.chipColour = chipCol;
-		Manager.ActiveChipEditor.chipNameColour = chipNameField.textComponent.color;
-	}
+    void UpdateColour(Color chipCol)
+    {
+        var cols = chipNameField.colors;
+        cols.normalColor = chipCol;
+        cols.highlightedColor = chipCol;
+        cols.selectedColor = chipCol;
+        cols.pressedColor = chipCol;
+        chipNameField.colors = cols;
+
+        float luma = chipCol.r * 0.213f + chipCol.g * 0.715f + chipCol.b * 0.072f;
+        Color chipNameCol = (luma > textColThreshold) ? Color.black : Color.white;
+        chipNameField.textComponent.color = chipNameCol;
+
+        Manager.ActiveChipEditor.chipData.Colour = chipCol;
+        Manager.ActiveChipEditor.chipData.NameColour = chipNameField.textComponent.color;
+    }
 }

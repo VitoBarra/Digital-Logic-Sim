@@ -27,20 +27,11 @@ public class Pin : MonoBehaviour {
 	Color interactCol = new Color (0.7f, 0.7f, 0.7f);
 	Material material;
 
-	public static float radius {
-		get {
-			float diameter = 0.215f;
-			return diameter / 2;
-		}
-	}
+    public static float radius => 0.215f / 2;
 
-	public static float interactionRadius {
-		get {
-			return radius * 1.1f;
-		}
-	}
+    public static float interactionRadius => radius * 1.1f;
 
-	void Awake () {
+    void Awake () {
 		material = GetComponent<MeshRenderer> ().material;
 		material.color = defaultCol;
 	}
@@ -53,25 +44,17 @@ public class Pin : MonoBehaviour {
 		transform.localScale = Vector3.one * radius * 2;
 	}
 
-	// Get the current state of the pin: 0 == LOW, 1 == HIGH
-	public int State {
-		get {
-			return currentState;
-		}
-	}
+    // Get the current state of the pin: 0 == LOW, 1 == HIGH
+    public int State => currentState;
 
-	// Note that for ChipOutput pins, the chip itself is considered the parent, so will always return true
-	// Otherwise, only true if the parentPin of this pin has been set
-	public bool HasParent {
-		get {
-			return parentPin != null || pinType == PinType.ChipOutput;
-		}
-	}
+    // Note that for ChipOutput pins, the chip itself is considered the parent, so will always return true
+    // Otherwise, only true if the parentPin of this pin has been set
+    public bool HasParent => parentPin != null || pinType == PinType.ChipOutput;
 
-	// Receive signal: 0 == LOW, 1 = HIGH
-	// Sets the current state to the signal
-	// Passes the signal on to any connected pins / electronic component
-	public void ReceiveSignal (int signal) {
+    // Receive signal: 0 == LOW, 1 = HIGH
+    // Sets the current state to the signal
+    // Passes the signal on to any connected pins / electronic component
+    public void ReceiveSignal (int signal) {
 		currentState = signal;
 
 		if (pinType == PinType.ChipInput && !cyclic) {

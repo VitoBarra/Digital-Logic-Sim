@@ -26,6 +26,7 @@ public class Keyboard : BuiltinChip{
 		RawKeyInput.Start(true);
 		RawKeyInput.OnKeyDown += keyDown;
 		RawKeyInput.OnKeyUp += keyUp;
+		category = ChipCategory.Custom;
 	}
 	void Update() {
 		if(Simulation.active) {

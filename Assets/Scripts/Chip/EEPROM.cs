@@ -9,7 +9,8 @@ public class EEPROM : BuiltinChip {
     int base10address;
 	protected override void Awake () {
 		base.Awake ();
-	}
+        category = ChipCategory.Custom;
+    }
 
 	protected override void ProcessOutput () {
         if(EEPROM_File.EEPROM_path != null) {

@@ -12,6 +12,7 @@ namespace Assets.Scripts.Chip
 		protected override void Awake()
 		{
 			base.Awake();
+			category = ChipCategory.Custom;
 		}
 
 		protected override void ProcessOutput()
