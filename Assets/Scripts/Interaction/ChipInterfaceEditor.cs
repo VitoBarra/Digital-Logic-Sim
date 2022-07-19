@@ -45,7 +45,7 @@ public class ChipInterfaceEditor : InteractionHandler
     {
         set
         {
-            currentEditorName = value.chipData.name;
+            currentEditorName = value.Data.name;
         }
     }
 

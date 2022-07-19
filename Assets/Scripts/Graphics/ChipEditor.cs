@@ -12,7 +12,7 @@ public class ChipEditor : MonoBehaviour {
 	public PinAndWireInteraction pinAndWireInteraction;
 
 
-	public ChipData chipData;
+	public ChipData Data;
 
 	void Start() {
 		inputsEditor.CurrentEditor = this;
@@ -43,7 +43,7 @@ public class ChipEditor : MonoBehaviour {
 
 	public void LoadFromSaveData (ChipSaveData saveData) {
 
-		chipData = saveData.chipData;
+		Data = saveData.Data;
 
 		// Load component chips
 		for (int i = 0; i < saveData.componentChips.Length; i++) {

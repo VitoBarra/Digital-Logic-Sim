@@ -23,14 +23,14 @@ public class ChipPackage : MonoBehaviour {
 	}
 
 	public void PackageCustomChip (ChipEditor chipEditor) {
-		gameObject.name = chipEditor.chipData.name;
-		nameText.text = chipEditor.chipData.name;
-		nameText.color = chipEditor.chipData.NameColour;
-		SetColour (chipEditor.chipData.Colour);
+		gameObject.name = chipEditor.Data.name;
+		nameText.text = chipEditor.Data.name;
+		nameText.color = chipEditor.Data.NameColour;
+		SetColour (chipEditor.Data.Colour);
 
 		// Add and set up the custom chip component
 		CustomChip chip = gameObject.AddComponent<CustomChip> ();
-		chip.chipName = chipEditor.chipData.name;
+		chip.chipName = chipEditor.Data.name;
 
 		// Set input signals
 		chip.inputSignals = new InputSignal[chipEditor.inputsEditor.signals.Count];

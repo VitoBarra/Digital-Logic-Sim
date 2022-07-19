@@ -19,21 +19,21 @@ public struct ChipData
 // Composite chip is a custom chip made up from other chips ("components")
 public class SavedChip
 {
-    public ChipData chipData;
+    public ChipData Data;
 
 
     // Names of all chips used as components in this new chip (each name appears only once)
-    public string[] componentDependecies;
+    public string[] ChipDependecies;
     // Data about all the chips used as components in this chip (positions, connections, etc)
     // Array is ordered: first come input signals, then output signals, then remaining component chips
     public SavedComponentChip[] savedComponentChips;
 
     public SavedChip(ChipSaveData chipSaveData)
     {
-        chipData = chipSaveData.chipData;
+        Data = chipSaveData.Data;
 
         // Create list of (unique) names of all chips used to make this chip
-        componentDependecies = chipSaveData.componentChips.Select(x => x.chipName).Distinct().ToArray();
+        ChipDependecies = chipSaveData.componentChips.Select(x => x.chipName).Distinct().ToArray();
 
         // Create serializable chips
         savedComponentChips = new SavedComponentChip[chipSaveData.componentChips.Length];

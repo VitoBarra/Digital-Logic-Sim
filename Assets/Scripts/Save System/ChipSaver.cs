@@ -21,13 +21,13 @@ public static class ChipSaver {
 		string wiringSaveString = JsonUtility.ToJson(wiringSystem, usePrettyPrint);
 
 		// Write to file
-		string savePath = SaveSystem.GetPathToSaveFile(chipEditor.chipData.name);
+		string savePath = SaveSystem.GetPathToSaveFile(chipEditor.Data.name);
 		using (StreamWriter writer = new StreamWriter(savePath))
 		{
 			writer.Write(saveString);
 		}
 
-		string wireLayoutSavePath = SaveSystem.GetPathToWireSaveFile(chipEditor.chipData.name);
+		string wireLayoutSavePath = SaveSystem.GetPathToWireSaveFile(chipEditor.Data.name);
 		using (StreamWriter writer = new StreamWriter(wireLayoutSavePath))
 		{
 			writer.Write(wiringSaveString);
@@ -67,10 +67,10 @@ public static class ChipSaver {
 
 		Manager manager = GameObject.FindObjectOfType<Manager>();
 		SavedChip[] allChips = SaveSystem.GetAllSavedChips();
-		SavedChip currentChip = Array.Find(allChips, c => c.chipData.name == chipName);
+		SavedChip currentChip = Array.Find(allChips, c => c.Data.name == chipName);
 		if (currentChip == null) return childrenChips;
 		
-		childrenChips.Add(currentChip.chipData.creationIndex, chipName);
+		childrenChips.Add(currentChip.Data.creationIndex, chipName);
 
 		foreach (SavedComponentChip scc in currentChip.savedComponentChips) {
 			if (Array.FindIndex(manager.builtinChips, c => c.chipName == scc.chipName) != -1)
@@ -98,24 +98,24 @@ public static class ChipSaver {
 		string wiringSaveString = JsonUtility.ToJson(wiringSystem, usePrettyPrint);
 
 		// Write to file
-		string savePath = SaveSystem.GetPathToSaveFile(chipEditor.chipData.name);
+		string savePath = SaveSystem.GetPathToSaveFile(chipEditor.Data.name);
 		using (StreamWriter writer = new StreamWriter(savePath))
 		{
 			writer.Write(saveString);
 		}
 
-		string wireLayoutSavePath = SaveSystem.GetPathToWireSaveFile(chipEditor.chipData.name);
+		string wireLayoutSavePath = SaveSystem.GetPathToWireSaveFile(chipEditor.Data.name);
 		using (StreamWriter writer = new StreamWriter(wireLayoutSavePath))
 		{
 			writer.Write(wiringSaveString);
 		}
 
 		// Update parent chips using this chip
-		string currentChipName = chipEditor.chipData.name;
+		string currentChipName = chipEditor.Data.name;
 		SavedChip[] savedChips = SaveSystem.GetAllSavedChips();
 		for (int i = 0; i < savedChips.Length; i++)
 		{
-			if (savedChips[i].componentDependecies.Contains(currentChipName))
+			if (savedChips[i].ChipDependecies.Contains(currentChipName))
 			{
 				int currentChipIndex = Array.FindIndex(savedChips[i].savedComponentChips, c => c.chipName == currentChipName);
 				SavedComponentChip updatedComponentChip = new SavedComponentChip(chipSaveData, chip);
@@ -134,7 +134,7 @@ public static class ChipSaver {
 
 				// Write to file
 				string parentSaveString = JsonUtility.ToJson(savedChips[i], usePrettyPrint);
-				string parentSavePath = SaveSystem.GetPathToSaveFile(savedChips[i].chipData.name);
+				string parentSavePath = SaveSystem.GetPathToSaveFile(savedChips[i].Data.name);
 				using (StreamWriter writer = new StreamWriter(parentSavePath))
 				{
 					writer.Write(parentSaveString);
@@ -164,7 +164,7 @@ public static class ChipSaver {
 		SavedChip[] savedChips = SaveSystem.GetAllSavedChips();
 		for (int i = 0; i < savedChips.Length; i++)
 		{
-			if (savedChips[i].componentDependecies.Contains(chipName))
+			if (savedChips[i].ChipDependecies.Contains(chipName))
 			{
 				return false;
 			}
@@ -177,7 +177,7 @@ public static class ChipSaver {
 		SavedChip[] savedChips = SaveSystem.GetAllSavedChips();
 		for (int i = 0; i < savedChips.Length; i++)
 		{
-			if (savedChips[i].componentDependecies.Contains(chipName))
+			if (savedChips[i].ChipDependecies.Contains(chipName))
 			{
 				SavedChip parentChip = savedChips[i];
 				int currentChipIndex = Array.FindIndex(parentChip.savedComponentChips, scc => scc.chipName == chipName);
@@ -210,17 +210,17 @@ public static class ChipSaver {
 		for (int i = 0; i < savedChips.Length; i++)
 		{
 			bool changed = false;
-			if (savedChips[i].chipData.name == oldChipName)
+			if (savedChips[i].Data.name == oldChipName)
 			{
-				savedChips[i].chipData.name = newChipName;
+				savedChips[i].Data.name = newChipName;
 				changed = true;
 			}
-			for (int j = 0; j < savedChips[i].componentDependecies.Length; j++)
+			for (int j = 0; j < savedChips[i].ChipDependecies.Length; j++)
 			{
-				string componentName = savedChips[i].componentDependecies[j];
+				string componentName = savedChips[i].ChipDependecies[j];
 				if (componentName == oldChipName)
 				{
-					savedChips[i].componentDependecies[j] = newChipName;
+					savedChips[i].ChipDependecies[j] = newChipName;
 					changed = true;
 				}
 			}
@@ -238,7 +238,7 @@ public static class ChipSaver {
             {
 				string saveString = JsonUtility.ToJson(savedChips[i], usePrettyPrint);
 				// Write to file
-				string savePath = SaveSystem.GetPathToSaveFile(savedChips[i].chipData.name);
+				string savePath = SaveSystem.GetPathToSaveFile(savedChips[i].Data.name);
 				using (StreamWriter writer = new StreamWriter(savePath))
 				{
 					writer.Write(saveString);

@@ -23,7 +23,7 @@ public static class ChipLoader
 
             SaveCompatibility.FixSaveCompatibility(ref chipSaveString);
             SavedChip savedChipTemp = JsonUtility.FromJson<SavedChip>(chipSaveString);
-            savedChipsDic.Add(savedChipTemp.chipData.name, savedChipTemp);
+            savedChipsDic.Add(savedChipTemp.Data.name, savedChipTemp);
         }
         return savedChipsDic;
     }
@@ -31,7 +31,6 @@ public static class ChipLoader
     public static void LoadAllChips(string[] chipPaths, Manager manager)
     {
         //load Built-in
-        var LoadFaild = new Dictionary<SavedChip, int>();
         Dictionary<string, Chip> loadedChips = new Dictionary<string, Chip>();
         for (int i = 0; i < manager.builtinChips.Length; i++)
         {
@@ -46,20 +45,22 @@ public static class ChipLoader
             if (!loadedChips.ContainsKey(chip.Key))
                 ResolveDependecy(chip.Value);
         }
+
+        
         // the simulation will never create Cyclic path so simple ricorsive descending graph explore shuld be fine
         void ResolveDependecy(SavedChip chip)
         {
-            foreach (var dependancy in chip.componentDependecies)
+            foreach (var dependancy in chip.ChipDependecies)
             {
                 if (string.Equals(dependancy, "SIGNAL IN") || string.Equals(dependancy, "SIGNAL OUT")) continue;
                 if (!loadedChips.ContainsKey(dependancy))
                     ResolveDependecy(ChipToLoad[dependancy]);
             }
-            InstansiateChipOnEditor(LoadChip(chip, loadedChips, manager.wirePrefab, LoadFaild));
+            FinishLoad(LoadChip(chip, loadedChips, manager.wirePrefab));
         }
 
 
-        void InstansiateChipOnEditor(ChipSaveData loadedChipData)
+        void FinishLoad(ChipSaveData loadedChipData)
         {
             if (loadedChipData != null)
             {
@@ -74,12 +75,12 @@ public static class ChipLoader
 
     // Instantiates all components that make up the given clip, and connects them up with wires
     // The components are parented under a single "holder" object, which is returned from the function
-    static ChipSaveData LoadChip(SavedChip chipToLoad, Dictionary<string, Chip> previouslyLoadedChips, Wire wirePrefab, Dictionary<SavedChip, int> RetryDic)
+    static ChipSaveData LoadChip(SavedChip chipToLoad, Dictionary<string, Chip> previouslyLoadedChips, Wire wirePrefab)
     {
         ChipSaveData loadedChipData = new ChipSaveData();
         int numComponents = chipToLoad.savedComponentChips.Length;
         loadedChipData.componentChips = new Chip[numComponents];
-        loadedChipData.chipData = chipToLoad.chipData;
+        loadedChipData.Data = chipToLoad.Data;
 
         // Spawn component chips (the chips used to create this chip)
         // These will have been loaded already, and stored in the previouslyLoadedChips dictionary
@@ -140,7 +141,7 @@ public static class ChipLoader
         ChipSaveData loadedChipData = new ChipSaveData();
         int numComponents = chipToLoad.savedComponentChips.Length;
         loadedChipData.componentChips = new Chip[numComponents];
-        loadedChipData.chipData = chipToLoad.chipData;
+        loadedChipData.Data = chipToLoad.Data;
         List<Wire> wiresToLoad = new List<Wire>();
 
         // Spawn component chips (the chips used to create this chip)
@@ -153,7 +154,7 @@ public static class ChipLoader
 
             if (!previouslyLoadedChips.ContainsKey(componentName))
             {
-                Debug.LogError("Failed to load sub component: " + componentName + " While loading " + chipToLoad.chipData.name);
+                Debug.LogError("Failed to load sub component: " + componentName + " While loading " + chipToLoad.Data.name);
             }
 
             Chip loadedComponentChip = GameObject.Instantiate(previouslyLoadedChips[componentName], pos, Quaternion.identity, chipEditor.chipImplementationHolder);
@@ -214,7 +215,7 @@ public static class ChipLoader
     static void SortChipsByOrderOfCreation(ref SavedChip[] chips)
     {
         var sortedChips = new List<SavedChip>(chips);
-        sortedChips.Sort((a, b) => a.chipData.creationIndex.CompareTo(b.chipData.creationIndex));
+        sortedChips.Sort((a, b) => a.Data.creationIndex.CompareTo(b.Data.creationIndex));
         chips = sortedChips.ToArray();
     }
 
@@ -251,7 +252,7 @@ public static class ChipLoader
         }
 
         ChipSaveData loadedChipData = LoadChipWithWires(chipToTryLoad, loadedChips, wirePrefab, chipEditor);
-        SavedWireLayout wireLayout = LoadWiringFile(SaveSystem.GetPathToWireSaveFile(loadedChipData.chipData.name));
+        SavedWireLayout wireLayout = LoadWiringFile(SaveSystem.GetPathToWireSaveFile(loadedChipData.Data.name));
 
         // Set wires anchor points
         for (int i = 0; i < wireLayout.serializableWires.Length; i++)
@@ -298,7 +299,7 @@ public static class ChipLoader
                 }
 
                 // Rename chip if already exist
-                if (Array.FindIndex(allChips, c => c.chipData.name == chipName) >= 0)
+                if (Array.FindIndex(allChips, c => c.Data.name == chipName) >= 0)
                 {
                     int nameCounter = 2;
                     string newName;
@@ -306,7 +307,7 @@ public static class ChipLoader
                     {
                         newName = chipName + nameCounter.ToString();
                         nameCounter++;
-                    } while (Array.FindIndex(allChips, c => c.chipData.name == newName) >= 0);
+                    } while (Array.FindIndex(allChips, c => c.Data.name == newName) >= 0);
 
                     nameUpdateLookupTable.Add(chipName, newName);
                     chipName = newName;

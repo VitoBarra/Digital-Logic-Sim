@@ -54,14 +54,15 @@ public class SaveCompatibility : MonoBehaviour
         dynamic lol = JsonConvert.DeserializeObject<dynamic>(chipSaveString);
 
         if (!chipSaveString.Contains("wireType") || chipSaveString.Contains("outputPinNames") || !chipSaveString.Contains("outputPins"))
-            lol = From025to034(lol);
-        if (!chipSaveString.Contains("chipData") || chipSaveString.Contains("componentNameList"))
-            lol = From034to040(lol);
+            From025to035(lol);
+        if (!chipSaveString.Contains("Data") || !chipSaveString.Contains("ChipDependecies"))
+            From035to038(lol);
 
+        
         if (DirtyBit)
             chipSaveString = JsonConvert.SerializeObject(lol);
 
-        WriteFile(lol, lol.chipData.name);
+        WriteFile(lol, lol.Data.name);
     }
 
     private static void WriteFile(dynamic lol, dynamic Filename)
@@ -76,7 +77,7 @@ public class SaveCompatibility : MonoBehaviour
         DirtyBit = false;
     }
 
-    public static dynamic From025to034(dynamic lol)
+    public static void From025to035(dynamic lol)
     {
         for (int i = 0; i < lol.savedComponentChips.Count; i++)
         {
@@ -114,18 +115,17 @@ public class SaveCompatibility : MonoBehaviour
             lol.savedComponentChips[i].inputPins = JsonConvert.DeserializeObject<dynamic>(JsonConvert.SerializeObject(newValue2));
         }
         DirtyBit = true;
-        return lol;
     }
-    public static dynamic From034to040(dynamic lol)
+    public static void From035to038(dynamic lol)
     {
         var JsonConverteForColor = new JsonSerializerSettings();
         JsonConverteForColor.Converters.Add(new ColorConverter());
 
-        if (lol.chipData == null)
+        if (lol.Data == null)
         {
             //replace old sparse data chip with new datachip
 
-            lol.chipData = JObject.FromObject(new ChipData()
+            lol.Data = JObject.FromObject(new ChipData()
             {
                 name = lol.name,
                 creationIndex = lol.creationIndex,
@@ -139,12 +139,11 @@ public class SaveCompatibility : MonoBehaviour
             lol.Property("nameColour").Remove();
         }
 
-        if (lol.componentDependecies == null && lol.componentNameList != null)
+        if (lol.ChipDependecies == null && lol.componentNameList != null)
         {
-            lol.componentDependecies = lol.componentNameList;
+            lol.ChipDependecies = lol.componentNameList;
             lol.Property("componentNameList").Remove();
         }
         DirtyBit = true;
-        return lol;
     }
 }

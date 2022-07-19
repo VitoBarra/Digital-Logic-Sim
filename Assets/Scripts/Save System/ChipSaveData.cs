@@ -6,7 +6,7 @@ using UnityEngine;
 
 public class ChipSaveData
 {
-    public ChipData chipData;
+    public ChipData Data;
 
     // All chips used as components in this new chip (including input and output signals)
     public Chip[] componentChips;
@@ -17,7 +17,7 @@ public class ChipSaveData
 
     public ChipSaveData(ChipEditor chipEditor)
     {
-        chipData = chipEditor.chipData;
+        Data = chipEditor.Data;
 
         List<Chip> componentChipList = new List<Chip>();
 

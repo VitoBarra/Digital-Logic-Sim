@@ -82,7 +82,7 @@ public class EditChipMenu : MonoBehaviour
 
         foreach (var item in SaveSystem.GetAllSavedChips())
         {
-            if (item.chipData.name == chipName)
+            if (item.Data.name == chipName)
             {
                 // Name already exists in custom chip
                 return false;

@@ -40,7 +40,7 @@ public class Manager : MonoBehaviour
     public Chip LoadChip(ChipSaveData loadedChipData)
     {
         activeChipEditor.LoadFromSaveData(loadedChipData);
-        currentChipCreationIndex = activeChipEditor.chipData.creationIndex;
+        currentChipCreationIndex = activeChipEditor.Data.creationIndex;
 
         Chip loadedChip = PackageChip();
         LoadNewEditor();
@@ -58,7 +58,7 @@ public class Manager : MonoBehaviour
 
     void SaveAndPackageChip(ChipCategory chipCategory)
     {
-        activeChipEditor.chipData.chipCategory = chipCategory;
+        activeChipEditor.Data.chipCategory = chipCategory;
         ChipSaver.Save(activeChipEditor);
         PackageChip();
         LoadNewEditor();
@@ -66,7 +66,7 @@ public class Manager : MonoBehaviour
 
     void UpdateChip()
     {
-        Chip updatedChip = TryPackageAndReplaceChip(activeChipEditor.chipData.name);
+        Chip updatedChip = TryPackageAndReplaceChip(activeChipEditor.Data.name);
         ChipSaver.Update(activeChipEditor, updatedChip);
         LoadNewEditor();
     }
@@ -117,7 +117,7 @@ public class Manager : MonoBehaviour
             UIManager.ChangeState(UIManagerState.Create);
         }
         activeChipEditor = Instantiate(chipEditorPrefab, Vector3.zero, Quaternion.identity);
-        activeChipEditor.chipData.creationIndex = currentChipCreationIndex;
+        activeChipEditor.Data.creationIndex = currentChipCreationIndex;
     }
 
     public void SpawnChip(Chip chip)

@@ -69,7 +69,7 @@ public class CreateMenu : MonoBehaviour
         string formattedName = value.ToUpper();
         doneButton.interactable = IsValidChipName(formattedName.Trim());
         chipNameField.text = formattedName;
-        Manager.ActiveChipEditor.chipData.name = formattedName.Trim();
+        Manager.ActiveChipEditor.Data.name = formattedName.Trim();
     }
 
     //TODO:  check gainst all chips
@@ -125,7 +125,7 @@ public class CreateMenu : MonoBehaviour
         Color chipNameCol = (luma > textColThreshold) ? Color.black : Color.white;
         chipNameField.textComponent.color = chipNameCol;
 
-        Manager.ActiveChipEditor.chipData.Colour = chipCol;
-        Manager.ActiveChipEditor.chipData.NameColour = chipNameField.textComponent.color;
+        Manager.ActiveChipEditor.Data.Colour = chipCol;
+        Manager.ActiveChipEditor.Data.NameColour = chipNameField.textComponent.color;
     }
 }
