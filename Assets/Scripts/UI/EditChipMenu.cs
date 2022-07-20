@@ -25,10 +25,7 @@ public class EditChipMenu : MonoBehaviour
 
     public void Init()
     {
-        if (init)
-        {
-            return;
-        }
+        if (init) return;
 
         chipBarUI = GameObject.Find("Chip Bar").GetComponent<ChipBarUI>();
         chipNameField.onValueChanged.AddListener(ChipNameFieldChanged);
@@ -82,10 +79,10 @@ public class EditChipMenu : MonoBehaviour
             // Name is either empty, AND or NOT
             return false;
         }
-        SavedChip[] savedChips = SaveSystem.GetAllSavedChips();
-        for (int i = 0; i < savedChips.Length; i++)
+
+        foreach (var item in SaveSystem.GetAllSavedChips())
         {
-            if (savedChips[i].name == chipName)
+            if (item.Data.name == chipName)
             {
                 // Name already exists in custom chip
                 return false;
@@ -104,9 +101,12 @@ public class EditChipMenu : MonoBehaviour
         };
 
         // If chipName is in notValidArray then is not a valid name
-        if (!notValidArray.Any(chipName.Contains) && chipName.Length != 0) {
+        if (!notValidArray.Any(chipName.Contains) && chipName.Length != 0)
+        {
             return true;
-        } else {
+        }
+        else
+        {
             return false;
         }
     }
@@ -145,7 +145,8 @@ public class EditChipMenu : MonoBehaviour
 
     public void ViewChip()
     {
-        if (currentChip != null) {
+        if (currentChip != null)
+        {
             manager.ViewChip(currentChip);
             CloseEditChipMenu();
         }
@@ -154,14 +155,16 @@ public class EditChipMenu : MonoBehaviour
     public void ExportChip()
     {
         string path = StandaloneFileBrowser.SaveFilePanel("Export chip design", "", currentChip.chipName + ".dls", "dls");
-        if (path.Length != 0) {
+        if (path.Length != 0)
+        {
             ChipSaver.Export(currentChip, path);
         }
     }
 
     public void Update()
     {
-        if (focused) {
+        if (focused)
+        {
             if (Input.GetMouseButtonDown(0) ||
                 Input.GetMouseButtonDown(1) ||
                 Input.GetMouseButtonDown(2))
@@ -169,9 +172,11 @@ public class EditChipMenu : MonoBehaviour
                 Vector2 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
                 RaycastHit2D hit = Physics2D.Raycast(mousePosition, Vector2.zero);
 
-                if(hit.collider != null) {
+                if (hit.collider != null)
+                {
                     // If click is outside the panel
-                    if (hit.collider.name != panel.name) {
+                    if (hit.collider.name != panel.name)
+                    {
                         CloseEditChipMenu();
                     }
                 }

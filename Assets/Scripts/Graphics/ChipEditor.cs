@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class ChipEditor : MonoBehaviour {
+    
 	public Transform chipImplementationHolder;
 	public Transform wireHolder;
 	public ChipInterfaceEditor inputsEditor;
@@ -10,14 +11,8 @@ public class ChipEditor : MonoBehaviour {
 	public ChipInteraction chipInteraction;
 	public PinAndWireInteraction pinAndWireInteraction;
 
-	[HideInInspector]
-	public string chipName;
-	[HideInInspector]
-	public Color chipColour;
-	[HideInInspector]
-	public Color chipNameColour;
-	[HideInInspector]
-	public int creationIndex;
+
+	public ChipData Data;
 
 	void Start() {
 		inputsEditor.CurrentEditor = this;
@@ -47,10 +42,8 @@ public class ChipEditor : MonoBehaviour {
 	}
 
 	public void LoadFromSaveData (ChipSaveData saveData) {
-		chipName = saveData.chipName;
-		chipColour = saveData.chipColour;
-		chipNameColour = saveData.chipNameColour;
-		creationIndex = saveData.creationIndex;
+
+		Data = saveData.Data;
 
 		// Load component chips
 		for (int i = 0; i < saveData.componentChips.Length; i++) {

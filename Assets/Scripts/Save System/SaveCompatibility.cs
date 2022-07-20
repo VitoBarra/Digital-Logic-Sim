@@ -4,90 +4,146 @@ using UnityEngine;
 using Newtonsoft.Json;
 using System.IO;
 using System.Text;
+using System.Dynamic;
+using Newtonsoft.Json.Linq;
+using System.Text.RegularExpressions;
+using System;
 
 public class SaveCompatibility : MonoBehaviour
 {
-
-	public static string FixStr(string message, char c)
+    static bool DirtyBit = false;
+    public static string FixStr(string message, char c)
     {
-		// To remove double quotes (passed as 'c') of the chip name
+        // To remove double quotes (passed as 'c') of the chip name
         StringBuilder aStr = new StringBuilder(message);
         for (int i = 0; i < aStr.Length; i++)
         {
-        if (aStr[i] == c)
-        {
-            aStr.Remove(i, 1);
-        }
+            if (aStr[i] == c)
+                aStr.Remove(i, 1);
         }
         return aStr.ToString();
     }
 
 
     class OutputPin
-	{
-		[JsonProperty("name")]
-		public string name { get; set; }
-		[JsonProperty("wireType")]
-		public int wireType { get; set; }
-	}
-
-	class InputPin
     {
-		[JsonProperty("name")]
+        [JsonProperty("name")]
         public string name { get; set; }
-		[JsonProperty("parentChipIndex")]
-        public int parentChipIndex { get; set; }
-		[JsonProperty("parentChipOutputIndex")]
-        public int parentChipOutputIndex { get; set; }
-		[JsonProperty("isCylic")]
-        public bool isCylic { get; set; }
-		[JsonProperty("wireType")]
+        [JsonProperty("wireType")]
         public int wireType { get; set; }
     }
 
-    public static dynamic FixSaveCompatibility(string chipSaveString) {
-		
+    class InputPin
+    {
+        [JsonProperty("name")]
+        public string name { get; set; }
+        [JsonProperty("parentChipIndex")]
+        public int parentChipIndex { get; set; }
+        [JsonProperty("parentChipOutputIndex")]
+        public int parentChipOutputIndex { get; set; }
+        [JsonProperty("isCylic")]
+        public bool isCylic { get; set; }
+        [JsonProperty("wireType")]
+        public int wireType { get; set; }
+    }
 
-		dynamic lol = JsonConvert.DeserializeObject<dynamic>(chipSaveString);
 
-		for (int i = 0; i < lol.savedComponentChips.Count; i++) {
+    public static void FixSaveCompatibility(ref string chipSaveString)
+    {
 
-			List<OutputPin> newValue = new List<OutputPin>();
-			List<InputPin> newValue2 = new List<InputPin>();
+        dynamic lol = JsonConvert.DeserializeObject<dynamic>(chipSaveString);
 
-			// Replace all 'outputPinNames' : [string] in save with 'outputPins' : [OutputPin]
-			for (int j = 0; j < lol.savedComponentChips[i].outputPinNames.Count; j++) {
-				newValue.Add(new OutputPin{
-					name= lol.savedComponentChips[i].outputPinNames[j],
-					wireType= 0
-				});
-			}
-			lol.savedComponentChips[i].Property("outputPinNames").Remove();
-			lol.savedComponentChips[i].outputPins = JsonConvert.DeserializeObject<dynamic>(JsonConvert.SerializeObject(newValue));
-			
-			// Add to all 'inputPins' dictionary the property 'wireType' with a value of 0 (at version 0.25 buses did not exist so its imposible for the wire to be of other type)
-			for (int j = 0; j < lol.savedComponentChips[i].inputPins.Count; j++) {
-				newValue2.Add(new InputPin{
-					name= lol.savedComponentChips[i].inputPins[j].name,
-					parentChipIndex = lol.savedComponentChips[i].inputPins[j].parentChipIndex,
-					parentChipOutputIndex = lol.savedComponentChips[i].inputPins[j].parentChipOutputIndex,
-					isCylic = lol.savedComponentChips[i].inputPins[j].isCylic,
-					wireType = 0
+        if (!chipSaveString.Contains("wireType") || chipSaveString.Contains("outputPinNames") || !chipSaveString.Contains("outputPins"))
+            From025to035(lol);
+        if (!chipSaveString.Contains("Data") || !chipSaveString.Contains("ChipDependecies"))
+            From035to038(lol);
 
-				});
-			}
-			lol.savedComponentChips[i].inputPins =  JsonConvert.DeserializeObject<dynamic>(JsonConvert.SerializeObject(newValue2));
-		}
+        
+        if (DirtyBit)
+            chipSaveString = JsonConvert.SerializeObject(lol);
 
-		// Update save file. Delete the old one a create one with the updated version 
-		string savePath = SaveSystem.GetPathToSaveFile( FixStr(JsonConvert.SerializeObject(lol.name), (char)0x22));
-		File.Delete(savePath);
-		using (StreamWriter writer = new StreamWriter(savePath))
-		{
-			writer.Write(JsonConvert.SerializeObject(lol, Formatting.Indented));
-			writer.Close();
-		}
+        WriteFile(lol, lol.Data.name);
+    }
 
-		return JsonConvert.SerializeObject(lol, Formatting.Indented);
-	}
+    private static void WriteFile(dynamic lol, dynamic Filename)
+    {
+        if (!DirtyBit) return;
+        string savePath = SaveSystem.GetPathToSaveFile(FixStr(JsonConvert.SerializeObject(Filename), (char)0x22));
+        using (StreamWriter writer = new StreamWriter(savePath))
+        {
+            var s = Regex.Unescape(JsonConvert.SerializeObject(lol, Formatting.Indented));
+            writer.Write(s);
+        }
+        DirtyBit = false;
+    }
+
+    public static void From025to035(dynamic lol)
+    {
+        for (int i = 0; i < lol.savedComponentChips.Count; i++)
+        {
+            List<OutputPin> newValue = new List<OutputPin>();
+            List<InputPin> newValue2 = new List<InputPin>();
+
+            if (lol.savedComponentChips[i].outputPinNames != null)
+            {
+                // Replace all 'outputPinNames' : [string] in save with 'outputPins' : [OutputPin]
+                for (int j = 0; j < lol.savedComponentChips[i].outputPinNames.Count; j++)
+                {
+                    newValue.Add(new OutputPin
+                    {
+                        name = lol.savedComponentChips[i].outputPinNames[j],
+                        wireType = 0
+                    });
+                }
+                lol.savedComponentChips[i].Property("outputPinNames").Remove();
+                lol.savedComponentChips[i].outputPins = JsonConvert.DeserializeObject<dynamic>(JsonConvert.SerializeObject(newValue));
+            }
+
+            // Add to all 'inputPins' dictionary the property 'wireType' with a value of 0 (at version 0.25 buses did not exist so its imposible for the wire to be of other type)
+            for (int j = 0; j < lol.savedComponentChips[i].inputPins.Count; j++)
+            {
+                newValue2.Add(new InputPin
+                {
+                    name = lol.savedComponentChips[i].inputPins[j].name,
+                    parentChipIndex = lol.savedComponentChips[i].inputPins[j].parentChipIndex,
+                    parentChipOutputIndex = lol.savedComponentChips[i].inputPins[j].parentChipOutputIndex,
+                    isCylic = lol.savedComponentChips[i].inputPins[j].isCylic,
+                    wireType = 0
+
+                });
+            }
+            lol.savedComponentChips[i].inputPins = JsonConvert.DeserializeObject<dynamic>(JsonConvert.SerializeObject(newValue2));
+        }
+        DirtyBit = true;
+    }
+    public static void From035to038(dynamic lol)
+    {
+        var JsonConverteForColor = new JsonSerializerSettings();
+        JsonConverteForColor.Converters.Add(new ColorConverter());
+
+        if (lol.Data == null)
+        {
+            //replace old sparse data chip with new datachip
+
+            lol.Data = JObject.FromObject(new ChipData()
+            {
+                name = lol.name,
+                creationIndex = lol.creationIndex,
+                Colour = ((JObject)lol.colour).ToObject<Color>(),
+                NameColour = ((JObject)lol.nameColour).ToObject<Color>(),
+                chipCategory = ChipCategory.Compatibility
+            }, JsonSerializer.Create(JsonConverteForColor));
+            lol.Property("name").Remove();
+            lol.Property("creationIndex").Remove();
+            lol.Property("colour").Remove();
+            lol.Property("nameColour").Remove();
+        }
+
+        if (lol.ChipDependecies == null && lol.componentNameList != null)
+        {
+            lol.ChipDependecies = lol.componentNameList;
+            lol.Property("componentNameList").Remove();
+        }
+        DirtyBit = true;
+    }
 }

@@ -4,6 +4,7 @@ public class OrGate : BuiltinChip {
 
 	protected override void Awake () {
 		base.Awake ();
+		category = ChipCategory.Gate;
 	}
 
 	protected override void ProcessOutput () {

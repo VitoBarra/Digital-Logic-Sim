@@ -4,6 +4,7 @@ using System.Collections;
 using System.Linq;
 using UnityEngine;
 using Debug = UnityEngine.Debug;
+using Color = UnityEngine.Color;
 
 public class DisplayScreen : BuiltinChip
 {
@@ -38,7 +39,10 @@ public class DisplayScreen : BuiltinChip
 		texture.wrapMode = TextureWrapMode.Clamp;
         textureRender.sharedMaterial.mainTexture = texture;
 		base.Awake();
+        category = ChipCategory.Custom;
 	}
+
+
 
     //update display here
 	protected override void ProcessOutput() {
